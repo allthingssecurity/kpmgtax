@@ -162,9 +162,7 @@ tailwind.config = {
 </main>
 
 <script>
-// Set to your EC2 public IP/domain after deploying, e.g. 'http://YOUR_EC2_IP:8080'
-// Leave empty when serving frontend from the same backend
-const API_BASE = '';
+const API_BASE = 'http://ec2-3-95-198-243.compute-1.amazonaws.com:8080';
 const messagesEl = document.getElementById('messages');
 const traceLog = document.getElementById('trace-log');
 const chatForm = document.getElementById('chat-form');
