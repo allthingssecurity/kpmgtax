@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigate Tax Hub — Powered by Generative AI</title>
+<style>
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#0A1628;
+  --primary-light:#132240;
+  --accent:#3B82F6;
+  --accent-hover:#2563EB;
+  --accent-glow:rgba(59,130,246,.15);
+  --success:#10B981;
+  --warning:#F59E0B;
+  --danger:#EF4444;
+  --text:#F1F5F9;
+  --text-muted:#94A3B8;
+  --text-dark:#1E293B;
+  --bg:#0F172A;
+  --surface:#1E293B;
+  --surface-hover:#334155;
+  --border:#334155;
+  --sidebar-w:260px;
+  --header-h:64px;
+  --radius:12px;
+  --radius-sm:8px;
+  --shadow:0 4px 24px rgba(0,0,0,.3);
+  --transition:all .25s cubic-bezier(.4,0,.2,1);
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font-family:inherit;border:none;outline:none}
+input,select,textarea{font-family:inherit;outline:none;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-sm);padding:10px 14px;font-size:.9rem;transition:var(--transition)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+/* ===== LOGIN SCREEN ===== */
+#login-screen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A1628 0%,#1a2744 50%,#0d2137 100%);transition:opacity .5s ease,visibility .5s ease}
+#login-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.login-bg-pattern{position:absolute;inset:0;opacity:.04;background-image:radial-gradient(circle at 25% 25%,#3B82F6 1px,transparent 1px),radial-gradient(circle at 75% 75%,#3B82F6 1px,transparent 1px);background-size:50px 50px}
+.login-card{position:relative;background:rgba(30,41,59,.8);backdrop-filter:blur(20px);border:1px solid rgba(59,130,246,.2);border-radius:20px;padding:48px 44px;width:420px;max-width:90vw;box-shadow:0 25px 80px rgba(0,0,0,.5)}
+.login-logo{text-align:center;margin-bottom:36px}
+.login-logo .logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--accent),#8B5CF6);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;margin-bottom:16px}
+.login-logo h1{font-size:1.5rem;font-weight:700;letter-spacing:-.5px}
+.login-logo h1 span{color:var(--accent)}
+.login-logo p{color:var(--text-muted);font-size:.85rem;margin-top:4px}
+.login-field{margin-bottom:20px}
+.login-field label{display:block;font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.login-field input{width:100%;padding:12px 16px;font-size:.95rem}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#2563EB);color:#fff;font-size:1rem;font-weight:600;border-radius:var(--radius);margin-top:8px;transition:var(--transition);letter-spacing:.3px}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(59,130,246,.4)}
+.login-divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--text-muted);font-size:.8rem}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.sso-btn{width:100%;padding:13px;background:transparent;border:1px solid var(--border);color:var(--text);font-size:.9rem;font-weight:500;border-radius:var(--radius);transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:10px}
+.sso-btn:hover{background:var(--surface-hover);border-color:var(--accent)}
+.login-footer{text-align:center;margin-top:24px;font-size:.8rem;color:var(--text-muted)}
+.login-footer a{color:var(--accent);font-weight:500}
+
+/* ===== APP LAYOUT ===== */
+#app{display:flex;height:100vh;opacity:0;transition:opacity .5s ease}
+#app.visible{opacity:1}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:var(--sidebar-w);background:var(--primary);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:var(--transition);z-index:100}
+.sidebar-header{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sidebar-brand{display:flex;align-items:center;gap:12px}
+.sidebar-brand .brand-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),#8B5CF6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0}
+.sidebar-brand h2{font-size:1.05rem;font-weight:700;letter-spacing:-.3px;line-height:1.2}
+.sidebar-brand h2 span{color:var(--accent)}
+.sidebar-brand small{font-size:.65rem;color:var(--text-muted);font-weight:400;display:block;margin-top:2px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 10px}
+.nav-section{margin-bottom:8px}
+.nav-section-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding:8px 12px 6px;opacity:.6}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-sm);color:var(--text-muted);font-size:.875rem;font-weight:500;cursor:pointer;transition:var(--transition);position:relative;margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.nav-item.active{background:var(--accent-glow);color:var(--accent);font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:10px}
+.sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);background:rgba(255,255,255,.03);cursor:pointer;transition:var(--transition)}
+.user-card:hover{background:rgba(255,255,255,.06)}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#8B5CF6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-info .name{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-info .role{font-size:.65rem;color:var(--text-muted)}
+
+/* ===== MAIN CONTENT ===== */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:var(--header-h);background:var(--primary);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;flex-shrink:0}
+.topbar-search{flex:1;max-width:480px;position:relative}
+.topbar-search input{width:100%;padding:9px 14px 9px 38px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid transparent;font-size:.85rem}
+.topbar-search input:focus{background:var(--surface);border-color:var(--accent)}
+.topbar-search .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.85rem}
+.topbar-actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.topbar-btn{width:38px;height:38px;border-radius:50%;background:transparent;color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:var(--transition);position:relative}
+.topbar-btn:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.topbar-btn .notif-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:2px solid var(--primary)}
+.content{flex:1;overflow-y:auto;padding:28px}
+
+/* ===== PAGE VIEWS ===== */
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-header{margin-bottom:28px}
+.page-header h1{font-size:1.65rem;font-weight:700;letter-spacing:-.5px}
+.page-header p{color:var(--text-muted);margin-top:4px;font-size:.9rem}
+
+/* ===== DASHBOARD ===== */
+.dashboard-hero{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(139,92,246,.08));border:1px solid rgba(59,130,246,.15);border-radius:16px;padding:36px;margin-bottom:28px;position:relative;overflow:hidden}
+.dashboard-hero::after{content:'';position:absolute;right:-30px;top:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(59,130,246,.1),transparent 70%);border-radius:50%}
+.dashboard-hero h2{font-size:1.4rem;font-weight:700;margin-bottom:6px}
+.dashboard-hero p{color:var(--text-muted);font-size:.9rem;max-width:500px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;transition:var(--transition)}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.stat-card .stat-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:14px}
+.stat-card .stat-value{font-size:1.7rem;font-weight:800;letter-spacing:-.5px}
+.stat-card .stat-label{font-size:.78rem;color:var(--text-muted);margin-top:2px}
+.stat-card .stat-change{font-size:.72rem;margin-top:8px;display:flex;align-items:center;gap:4px}
+.stat-change.up{color:var(--success)}
+.stat-change.down{color:var(--danger)}
+.modules-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden}
+.module-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.module-card .mod-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:16px}
+.module-card h3{font-size:1rem;font-weight:700;margin-bottom:6px}
+.module-card p{font-size:.78rem;color:var(--text-muted);line-height:1.5}
+.module-card .mod-arrow{position:absolute;top:20px;right:20px;opacity:0;transform:translateX(-4px);transition:var(--transition);color:var(--accent)}
+.module-card:hover .mod-arrow{opacity:1;transform:translateX(0)}
+
+/* ===== SECTION LAYOUTS ===== */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.card-header h3{font-size:1.05rem;font-weight:700}
+.btn{padding:9px 18px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;transition:var(--transition);display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 15px rgba(59,130,246,.3)}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{background:var(--surface-hover);border-color:var(--text-muted)}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn-icon{width:34px;height:34px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;transition:var(--transition)}
+.btn-icon:hover{background:var(--surface-hover);color:var(--text)}
+
+/* ===== SEARCH PAGE ===== */
+.search-bar{display:flex;gap:12px;margin-bottom:24px}
+.search-bar input{flex:1;padding:14px 20px;font-size:1rem;border-radius:var(--radius)}
+.search-filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.filter-chip{padding:7px 16px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text-muted);font-size:.78rem;font-weight:500;cursor:pointer;transition:var(--transition)}
+.filter-chip:hover,.filter-chip.active{background:var(--accent-glow);border-color:var(--accent);color:var(--accent)}
+.results-list{display:flex;flex-direction:column;gap:12px}
+.result-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:var(--transition);cursor:pointer}
+.result-item:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.result-item .result-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.result-item h4{font-size:.95rem;font-weight:600;flex:1}
+.result-item .result-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.result-meta span{font-size:.72rem;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.result-item .result-excerpt{font-size:.82rem;color:var(--text-muted);line-height:1.6}
+.tag{display:inline-block;padding:3px 10px;border-radius:6px;font-size:.7rem;font-weight:600}
+.tag-blue{background:rgba(59,130,246,.15);color:#60A5FA}
+.tag-green{background:rgba(16,185,129,.15);color:#34D399}
+.tag-amber{background:rgba(245,158,11,.15);color:#FBBF24}
+.tag-purple{background:rgba(139,92,246,.15);color:#A78BFA}
+
+/* ===== QUERY / CHAT PAGE ===== */
+.chat-layout{display:flex;gap:0;height:calc(100vh - var(--header-h) - 56px);margin:-28px;margin-top:-28px}
+.chat-sidebar{width:280px;background:var(--primary);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px;flex-shrink:0}
+.chat-sidebar .chat-new-btn{width:100%;padding:12px;background:var(--accent);color:#fff;font-weight:600;border-radius:var(--radius-sm);font-size:.85rem;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--transition)}
+.chat-sidebar .chat-new-btn:hover{background:var(--accent-hover)}
+.chat-history{flex:1;overflow-y:auto}
+.chat-history-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);margin-bottom:4px;font-size:.82rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-history-item:hover{background:rgba(255,255,255,.05)}
+.chat-history-item.active{background:var(--accent-glow);color:var(--accent)}
+.chat-main{flex:1;display:flex;flex-direction:column;background:var(--bg)}
+.chat-mode-bar{padding:12px 24px;border-bottom:1px solid var(--border);display:flex;gap:8px;background:var(--surface);flex-wrap:wrap;align-items:center}
+.mode-chip{padding:7px 16px;border-radius:20px;font-size:.78rem;font-weight:600;cursor:pointer;transition:var(--transition);border:1px solid var(--border);color:var(--text-muted);background:transparent}
+.mode-chip:hover{border-color:var(--accent);color:var(--text)}
+.mode-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.chat-messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.chat-msg{max-width:75%;display:flex;gap:12px}
+.chat-msg.user{align-self:flex-end;flex-direction:row-reverse}
+.chat-msg .msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
+.chat-msg.ai .msg-avatar{background:linear-gradient(135deg,var(--accent),#8B5CF6);color:#fff}
+.chat-msg.user .msg-avatar{background:rgba(255,255,255,.1);color:var(--text)}
+.chat-msg .msg-bubble{padding:14px 18px;border-radius:16px;font-size:.88rem;line-height:1.65}
+.chat-msg.ai .msg-bubble{background:var(--surface);border:1px solid var(--border);border-top-left-radius:4px}
+.chat-msg.user .msg-bubble{background:var(--accent);color:#fff;border-top-right-radius:4px}
+.chat-msg .msg-time{font-size:.65rem;color:var(--text-muted);margin-top:4px}
+.chat-input-area{padding:16px 24px;border-top:1px solid var(--border);background:var(--surface)}
+.chat-input-row{display:flex;gap:10px;align-items:flex-end}
+.chat-input-row textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:12px 16px;border-radius:var(--radius);font-size:.9rem;line-height:1.5}
+.chat-input-actions{display:flex;gap:6px;margin-top:8px}
+.chat-send-btn{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:var(--transition);flex-shrink:0}
+.chat-send-btn:hover{background:var(--accent-hover);transform:scale(1.05)}
+
+/* ===== SUMMARIZE PAGE ===== */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:48px;text-align:center;cursor:pointer;transition:var(--transition);margin-bottom:24px}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-glow)}
+.upload-zone .upload-icon{font-size:2.5rem;margin-bottom:12px;opacity:.5}
+.upload-zone h3{font-size:1rem;font-weight:600;margin-bottom:6px}
+.upload-zone p{font-size:.82rem;color:var(--text-muted)}
+.summary-result{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.summary-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.summary-panel h4{font-size:.95rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* ===== TABLE STYLES ===== */
+.data-table{width:100%;border-collapse:separate;border-spacing:0}
+.data-table thead th{text-align:left;padding:12px 16px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface)}
+.data-table tbody td{padding:14px 16px;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.data-table tbody tr{transition:var(--transition)}
+.data-table tbody tr:hover{background:rgba(255,255,255,.03)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.status-dot.completed{background:var(--success)}
+.status-dot.in-progress{background:var(--warning)}
+.status-dot.failed{background:var(--danger)}
+
+/* ===== PREPARE PAGE ===== */
+.prepare-steps{display:flex;gap:0;margin-bottom:28px}
+.prepare-step{flex:1;text-align:center;position:relative;padding:16px 12px}
+.prepare-step::after{content:'';position:absolute;top:28px;right:0;width:50%;height:2px;background:var(--border)}
+.prepare-step::before{content:'';position:absolute;top:28px;left:0;width:50%;height:2px;background:var(--border)}
+.prepare-step:first-child::before{display:none}
+.prepare-step:last-child::after{display:none}
+.prepare-step .step-num{width:36px;height:36px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;margin-bottom:8px;position:relative;z-index:1;transition:var(--transition)}
+.prepare-step.active .step-num{background:var(--accent);border-color:var(--accent);color:#fff}
+.prepare-step.done .step-num{background:var(--success);border-color:var(--success);color:#fff}
+.prepare-step .step-label{font-size:.75rem;font-weight:600;color:var(--text-muted)}
+.prepare-step.active .step-label{color:var(--accent)}
+.prepare-step.done .step-label{color:var(--success)}
+.section-tabs{display:flex;gap:4px;background:var(--primary);border-radius:var(--radius);padding:4px;margin-bottom:20px;overflow-x:auto}
+.section-tab{padding:9px 18px;border-radius:var(--radius-sm);font-size:.78rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:var(--transition);white-space:nowrap}
+.section-tab:hover{color:var(--text)}
+.section-tab.active{background:var(--accent);color:#fff}
+
+/* ===== EXTRACT PAGE ===== */
+.extract-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+.extract-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.extract-card h4{font-size:.85rem;font-weight:600;color:var(--text-muted);margin-bottom:8px}
+.extract-card .value{font-size:1rem;font-weight:600}
+
+/* ===== DOC REPO PAGE ===== */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px}
+.doc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:var(--transition);cursor:pointer}
+.doc-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.doc-card .doc-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:12px}
+.doc-card h4{font-size:.9rem;font-weight:600;margin-bottom:6px}
+.doc-card p{font-size:.75rem;color:var(--text-muted)}
+.doc-card .doc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05)}
+.doc-card .doc-footer span{font-size:.7rem;color:var(--text-muted)}
+
+/* ===== NEW INCOME TAX PAGE ===== */
+.mapping-table{margin-top:20px}
+.mapping-row{display:grid;grid-template-columns:1fr 40px 1fr;gap:16px;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;transition:var(--transition)}
+.mapping-row:hover{border-color:var(--accent)}
+.mapping-arrow{text-align:center;color:var(--accent);font-size:1.2rem}
+.mapping-section{font-size:.85rem}
+.mapping-section .section-id{font-weight:700;margin-bottom:4px}
+.mapping-section .section-title{color:var(--text-muted);font-size:.78rem}
+
+/* ===== MASTER PAGE ===== */
+.master-tabs{display:flex;gap:4px;margin-bottom:24px}
+.master-tab{padding:10px 20px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;cursor:pointer;transition:var(--transition);color:var(--text-muted);background:transparent}
+.master-tab:hover{color:var(--text)}
+.master-tab.active{background:var(--accent);color:#fff}
+
+/* ===== RECENT UPDATES ===== */
+.update-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.update-item:last-child{border-bottom:none}
+.update-dot{width:10px;height:10px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.update-content h4{font-size:.9rem;font-weight:600;margin-bottom:4px}
+.update-content p{font-size:.78rem;color:var(--text-muted);line-height:1.5}
+.update-content .update-meta{display:flex;gap:12px;margin-top:6px}
+.update-content .update-meta span{font-size:.7rem;color:var(--text-muted)}
+
+/* ===== FEEDBACK PAGE ===== */
+.feedback-form{max-width:600px}
+.feedback-stars{display:flex;gap:8px;margin-bottom:20px}
+.feedback-star{font-size:2rem;cursor:pointer;transition:var(--transition);opacity:.3}
+.feedback-star:hover,.feedback-star.active{opacity:1;color:#FBBF24;transform:scale(1.1)}
+.feedback-form textarea{width:100%;min-height:140px;margin-bottom:16px}
+
+/* ===== FORM GRID ===== */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.78rem;font-weight:600;color:var(--text-muted);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%}
+.form-group.full{grid-column:1/-1}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1200px){.modules-grid,.stats-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.sidebar{display:none}.modules-grid,.stats-row{grid-template-columns:1fr}.chat-sidebar{display:none}}
+
+/* ===== ANIMATIONS ===== */
+.typing-indicator{display:flex;gap:4px;padding:8px 0}
+.typing-indicator span{width:6px;height:6px;border-radius:50%;background:var(--text-muted);animation:typing 1.4s infinite}
+.typing-indicator span:nth-child(2){animation-delay:.2s}
+.typing-indicator span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-6px);opacity:1}}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+  <div class="login-bg-pattern"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">NTH</div>
+      <h1>Navigate <span>Tax Hub</span></h1>
+      <p>Powered by Generative AI</p>
+    </div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" placeholder="Enter your username" id="login-user" value="admin@kpmg.com">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" placeholder="Enter your password" id="login-pass" value="••••••••">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-divider">or continue with</div>
+    <button class="sso-btn" onclick="doLogin()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      SSO Login
+    </button>
+    <div class="login-footer">
+      <a href="#">Forgot password?</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-icon">NTH</div>
+        <h2>Navigate <span>Tax Hub</span><small>Powered by Gen AI</small></h2>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard',this)">
+          <span class="nav-icon">&#9783;</span> Dashboard
+        </div>
+        <div class="nav-item" data-page="search" onclick="navigate('search',this)">
+          <span class="nav-icon">&#128269;</span> Search
+        </div>
+        <div class="nav-item" data-page="summarize" onclick="navigate('summarize',this)">
+          <span class="nav-icon">&#128196;</span> Summarize
+        </div>
+        <div class="nav-item" data-page="query" onclick="navigate('query',this)">
+          <span class="nav-icon">&#128172;</span> Query
+          <span class="nav-badge">AI</span>
+        </div>
+        <div class="nav-item" data-page="prepare" onclick="navigate('prepare',this)">
+          <span class="nav-icon">&#9997;</span> Prepare Submission
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Tools</div>
+        <div class="nav-item" data-page="extract" onclick="navigate('extract',this)">
+          <span class="nav-icon">&#128203;</span> Extract Information
+        </div>
+        <div class="nav-item" data-page="repository" onclick="navigate('repository',this)">
+          <span class="nav-icon">&#128193;</span> Document Repository
+        </div>
+        <div class="nav-item" data-page="newtax" onclick="navigate('newtax',this)">
+          <span class="nav-icon">&#9878;</span> New Income Tax
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Others</div>
+        <div class="nav-item" data-page="updates" onclick="navigate('updates',this)">
+          <span class="nav-icon">&#128276;</span> Recent Updates
+          <span class="nav-badge">12</span>
+        </div>
+        <div class="nav-item" data-page="feedback" onclick="navigate('feedback',this)">
+          <span class="nav-icon">&#11088;</span> Feedback
+        </div>
+        <div class="nav-item" data-page="master" onclick="navigate('master',this)">
+          <span class="nav-icon">&#9881;</span> Master
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">AK</div>
+        <div class="user-info">
+          <div class="name">Amit Kumar</div>
+          <div class="role">Tax Manager</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-search">
+        <span class="search-icon">&#128269;</span>
+        <input type="text" placeholder="Quick search across documents, case laws, acts...">
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" title="Notifications">&#128276;<span class="notif-dot"></span></button>
+        <button class="topbar-btn" title="Help">&#10067;</button>
+        <button class="topbar-btn" title="Settings">&#9881;</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- ===== DASHBOARD PAGE ===== -->
+      <div class="page active" id="page-dashboard">
+        <div class="dashboard-hero">
+          <h2>Welcome back, Amit &#128075;</h2>
+          <p>Your AI-powered tax research assistant is ready. Explore case laws, generate summaries, query documents, and prepare submissions — all in one place.</p>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(59,130,246,.15);color:#60A5FA">&#128269;</div>
+            <div class="stat-value">2,847</div>
+            <div class="stat-label">Searches this month</div>
+            <div class="stat-change up">&#9650; 12.3% from last month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(16,185,129,.15);color:#34D399">&#128196;</div>
+            <div class="stat-value">156</div>
+            <div class="stat-label">Documents summarized</div>
+            <div class="stat-change up">&#9650; 8.1% from last month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(139,92,246,.15);color:#A78BFA">&#128172;</div>
+            <div class="stat-value">423</div>
+            <div class="stat-label">Queries answered</div>
+            <div class="stat-change up">&#9650; 23.5% from last month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(245,158,11,.15);color:#FBBF24">&#9997;</div>
+            <div class="stat-value">34</div>
+            <div class="stat-label">Submissions prepared</div>
+            <div class="stat-change up">&#9650; 5.2% from last month</div>
+          </div>
+        </div>
+        <div class="page-header"><h1>Modules</h1><p>Access all Navigate Tax Hub features</p></div>
+        <div class="modules-grid">
+          <div class="module-card" onclick="navigate('search',document.querySelector('[data-page=search]'))">
+            <div class="mod-icon" style="background:rgba(59,130,246,.15);color:#60A5FA">&#128269;</div>
+            <h3>Search</h3>
+            <p>Search across case laws, acts, rules, notifications, circulars and your internal documents.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+          <div class="module-card" onclick="navigate('summarize',document.querySelector('[data-page=summarize]'))">
+            <div class="mod-icon" style="background:rgba(16,185,129,.15);color:#34D399">&#128196;</div>
+            <h3>Summarize</h3>
+            <p>Generate AI-curated summaries of case laws, notices, circulars, position papers and more.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+          <div class="module-card" onclick="navigate('query',document.querySelector('[data-page=query]'))">
+            <div class="mod-icon" style="background:rgba(139,92,246,.15);color:#A78BFA">&#128172;</div>
+            <h3>Query</h3>
+            <p>Ask AI-powered questions using multiple sources — documents, NTH repository, global database.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+          <div class="module-card" onclick="navigate('prepare',document.querySelector('[data-page=prepare]'))">
+            <div class="mod-icon" style="background:rgba(245,158,11,.15);color:#FBBF24">&#9997;</div>
+            <h3>Prepare Submission</h3>
+            <p>Draft replies to notices with AI assistance — extract issues, generate structured responses.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+          <div class="module-card" onclick="navigate('extract',document.querySelector('[data-page=extract]'))">
+            <div class="mod-icon" style="background:rgba(236,72,153,.15);color:#F472B6">&#128203;</div>
+            <h3>Extract Information</h3>
+            <p>Extract structured data from invoices, notices and unstructured documents automatically.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+          <div class="module-card" onclick="navigate('repository',document.querySelector('[data-page=repository]'))">
+            <div class="mod-icon" style="background:rgba(34,211,238,.15);color:#22D3EE">&#128193;</div>
+            <h3>Document Repository</h3>
+            <p>Centralized repository for your proprietary tax and legal documents with full search.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+          <div class="module-card" onclick="navigate('newtax',document.querySelector('[data-page=newtax]'))">
+            <div class="mod-icon" style="background:rgba(251,146,60,.15);color:#FB923C">&#9878;</div>
+            <h3>New Income Tax Code</h3>
+            <p>Compare old and new income tax sections, view mappings, and query the new code with AI.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+          <div class="module-card" onclick="navigate('updates',document.querySelector('[data-page=updates]'))">
+            <div class="mod-icon" style="background:rgba(168,85,247,.15);color:#C084FC">&#128276;</div>
+            <h3>Recent Updates</h3>
+            <p>Stay current with new case laws, notifications, and circulars published in the last 90 days.</p>
+            <span class="mod-arrow">&#8594;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SEARCH PAGE ===== -->
+      <div class="page" id="page-search">
+        <div class="page-header">
+          <h1>Search</h1>
+          <p>Search across case laws, acts, rules, notifications, circulars and internal documents</p>
+        </div>
+        <div class="search-bar">
+          <input type="text" placeholder="e.g., GST implications on secondment of employees..." id="search-input">
+          <button class="btn btn-primary" onclick="performSearch()">&#128269; Search</button>
+        </div>
+        <div class="search-filters">
+          <span class="filter-chip active">All</span>
+          <span class="filter-chip">Case Laws</span>
+          <span class="filter-chip">Acts & Rules</span>
+          <span class="filter-chip">Notifications</span>
+          <span class="filter-chip">Circulars</span>
+          <span class="filter-chip">Opinions</span>
+          <span class="filter-chip">Internal Docs</span>
+        </div>
+        <div class="card" style="margin-bottom:16px;padding:14px 20px;display:flex;gap:12px;align-items:center;font-size:.82rem">
+          <span style="color:var(--accent)">&#9432;</span>
+          <span style="color:var(--text-muted)">Tip: Use natural language like "Applicability of MFN clause for TDS payments" for best results. Add legislation context for refined results.</span>
+        </div>
+        <div class="results-list" id="search-results">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- ===== SUMMARIZE PAGE ===== -->
+      <div class="page" id="page-summarize">
+        <div class="page-header">
+          <h1>Summarize</h1>
+          <p>Generate AI-curated summaries of case laws, notices, circulars, position papers and more</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Upload Document</h3>
+            <div style="display:flex;gap:8px">
+              <select style="padding:8px 14px;font-size:.82rem">
+                <option>Case Law</option>
+                <option>Notification</option>
+                <option>Circular</option>
+                <option>Position Paper</option>
+                <option>Notice</option>
+                <option>Opinion</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="upload-zone" id="upload-zone">
+            <div class="upload-icon">&#128228;</div>
+            <h3>Drop your document here or click to browse</h3>
+            <p>Supports PDF and DOCX files. Best results with original (non-scanned) PDFs.</p>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <h3>Recent Summaries</h3>
+            <button class="btn btn-secondary btn-sm">&#8635; Refresh</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>ID</th><th>Document</th><th>Category</th><th>Status</th><th>Date</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>#SUM-0042</td><td>Commissioner of Income Tax v. ABC Pvt Ltd</td><td><span class="tag tag-blue">Case Law</span></td><td><span class="status-dot completed"></span>Completed</td><td>06 Feb 2025</td><td><button class="btn-icon">&#128065;</button> <button class="btn-icon">&#11015;</button></td></tr>
+              <tr><td>#SUM-0041</td><td>GST Notification No. 12/2025</td><td><span class="tag tag-green">Notification</span></td><td><span class="status-dot completed"></span>Completed</td><td>05 Feb 2025</td><td><button class="btn-icon">&#128065;</button> <button class="btn-icon">&#11015;</button></td></tr>
+              <tr><td>#SUM-0040</td><td>Position Paper - Transfer Pricing FY24</td><td><span class="tag tag-purple">Position Paper</span></td><td><span class="status-dot in-progress"></span>In Progress</td><td>05 Feb 2025</td><td><button class="btn-icon pulse">&#8987;</button></td></tr>
+              <tr><td>#SUM-0039</td><td>Notice u/s 148A - XYZ Corporation</td><td><span class="tag tag-amber">Notice</span></td><td><span class="status-dot completed"></span>Completed</td><td>04 Feb 2025</td><td><button class="btn-icon">&#128065;</button> <button class="btn-icon">&#11015;</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Sample summary display -->
+        <div class="summary-result" id="summary-display" style="display:none">
+          <div class="summary-panel">
+            <h4>&#128196; Summary</h4>
+            <div style="font-size:.85rem;line-height:1.7;color:var(--text-muted)">
+              <p><strong style="color:var(--text)">Short Summary:</strong> The case examines whether the MFN clause in the India-Netherlands DTAA can be invoked to reduce the tax rate on royalty payments from 10% to 5%, in light of India's subsequent treaty with Slovenia.</p>
+              <p style="margin-top:12px"><strong style="color:var(--text)">Background:</strong> The assessee, a Netherlands-based entity, received royalty income from its Indian subsidiary. It claimed the benefit of the MFN clause to reduce the withholding tax rate.</p>
+              <p style="margin-top:12px"><strong style="color:var(--text)">Court Verdict:</strong> The High Court held that the MFN clause is automatically applicable and the benefit of reduced rate should be granted to the assessee.</p>
+            </div>
+          </div>
+          <div class="summary-panel">
+            <h4>&#128218; Other Information</h4>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div class="extract-card" style="padding:14px"><h4>Citation</h4><div class="value">[2025] 158 taxmann.com 234 (Delhi HC)</div></div>
+              <div class="extract-card" style="padding:14px"><h4>Parties</h4><div class="value">CIT vs Netherlands BV Pvt Ltd</div></div>
+              <div class="extract-card" style="padding:14px"><h4>Legislation</h4><div class="value">Income Tax Act, 1961 / India-Netherlands DTAA</div></div>
+              <div class="extract-card" style="padding:14px"><h4>Key Principle</h4><div class="value" style="font-size:.82rem;color:var(--text-muted)">MFN clause in DTAA operates automatically without requiring a separate notification from the Government.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== QUERY PAGE ===== -->
+      <div class="page" id="page-query">
+        <div class="chat-layout">
+          <div class="chat-sidebar">
+            <button class="chat-new-btn">&#10010; New Chat</button>
+            <div style="margin-bottom:12px">
+              <input type="text" placeholder="Search chats..." style="width:100%;padding:8px 12px;font-size:.8rem;border-radius:8px">
+            </div>
+            <div class="chat-history">
+              <div class="chat-history-item active">GST on secondment of employees</div>
+              <div class="chat-history-item">MFN clause TDS implications</div>
+              <div class="chat-history-item">Section 14A disallowance analysis</div>
+              <div class="chat-history-item">Transfer pricing safe harbor rules</div>
+              <div class="chat-history-item">New Income Tax Bill comparison</div>
+              <div class="chat-history-item">Royalty payments to non-residents</div>
+              <div class="chat-history-item">PE determination under DTAA</div>
+            </div>
+          </div>
+          <div class="chat-main">
+            <div class="chat-mode-bar">
+              <span style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-right:4px">Mode:</span>
+              <span class="mode-chip active">NTH Repository</span>
+              <span class="mode-chip">User Documents</span>
+              <span class="mode-chip">Docs + AI Knowledge</span>
+              <span class="mode-chip">Global Repository</span>
+              <span class="mode-chip">New Income Tax</span>
+              <div style="margin-left:auto;display:flex;gap:6px">
+                <button class="btn btn-secondary btn-sm">&#128206; Upload</button>
+                <button class="btn btn-secondary btn-sm">&#9881; Filters</button>
+              </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+              <div class="chat-msg user">
+                <div class="msg-avatar">AK</div>
+                <div>
+                  <div class="msg-bubble">What are the GST implications on secondment of foreign employees from an overseas company to an Indian company?</div>
+                  <div class="msg-time" style="text-align:right">10:32 AM</div>
+                </div>
+              </div>
+              <div class="chat-msg ai">
+                <div class="msg-avatar">AI</div>
+                <div>
+                  <div class="msg-bubble">
+                    <strong>GST Implications on Secondment of Employees</strong><br><br>
+                    Based on the analysis of case laws and provisions available in the NTH repository, here is a structured response:<br><br>
+                    <strong>1. Whether secondment constitutes "supply of services"?</strong><br>
+                    The Supreme Court in <em>Commissioner of Service Tax v. Northern Operating Systems Pvt Ltd</em> [2022] held that secondment of employees by overseas entities to Indian group companies constitutes "supply of manpower" and is liable to service tax (now GST). The key factors considered were:<br>
+                    &#8226; The overseas entity retains the lien over the employees<br>
+                    &#8226; The Indian entity reimburses the cost to the overseas entity<br>
+                    &#8226; The arrangement is akin to supply of manpower<br><br>
+                    <strong>2. Applicable GST provisions</strong><br>
+                    &#8226; The supply falls under Section 7 of CGST Act (scope of supply)<br>
+                    &#8226; Reverse Charge Mechanism (RCM) applies under Section 9(3)<br>
+                    &#8226; The Indian entity is liable to pay GST under RCM<br><br>
+                    <strong>3. Valuation</strong><br>
+                    As per Rule 28 of CGST Rules, the value of supply shall be the consideration paid or payable for the supply. The cost-to-cost reimbursement would form the taxable value.<br><br>
+                    <div style="padding:12px;background:rgba(59,130,246,.08);border-radius:8px;border-left:3px solid var(--accent);font-size:.82rem">
+                      <strong>Key Citations:</strong><br>
+                      &#8226; Northern Operating Systems [2022] 138 taxmann.com 87 (SC)<br>
+                      &#8226; CC, CE & ST v. M/s Arvato India [2023] CESTAT<br>
+                      &#8226; Section 7, 9(3), 13(3) of CGST Act, 2017
+                    </div>
+                  </div>
+                  <div class="msg-time">10:32 AM &middot; NTH Repository</div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-row">
+                <textarea id="chat-input" placeholder="Ask a follow-up question..." rows="1"></textarea>
+                <button class="chat-send-btn" onclick="sendChatMessage()">&#10148;</button>
+              </div>
+              <div class="chat-input-actions">
+                <button class="btn btn-secondary btn-sm" title="Alt+E">&#10024; Enhance Prompt</button>
+                <button class="btn btn-secondary btn-sm" title="Alt+U">&#128206; Upload</button>
+                <button class="btn btn-secondary btn-sm" title="Alt+P">&#128218; Prompt Library</button>
+                <button class="btn btn-secondary btn-sm" title="Alt+M">&#129302; Switch Model</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PREPARE PAGE ===== -->
+      <div class="page" id="page-prepare">
+        <div class="page-header">
+          <h1>Prepare Submission</h1>
+          <p>AI-assisted drafting of reply to notices and other submissions</p>
+        </div>
+        <div class="prepare-steps">
+          <div class="prepare-step done"><div class="step-num">&#10003;</div><div class="step-label">Upload Notice</div></div>
+          <div class="prepare-step done"><div class="step-num">&#10003;</div><div class="step-label">AI Extraction</div></div>
+          <div class="prepare-step active"><div class="step-num">3</div><div class="step-label">Upload Docs</div></div>
+          <div class="prepare-step"><div class="step-num">4</div><div class="step-label">Prepare Draft</div></div>
+          <div class="prepare-step"><div class="step-num">5</div><div class="step-label">Review & Export</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+          <div class="card">
+            <div class="card-header"><h3>Submission Details</h3><span class="tag tag-blue">#SUB-0087</span></div>
+            <div class="form-grid">
+              <div class="form-group"><label>Company</label><input type="text" value="ABC Industries Pvt Ltd" readonly></div>
+              <div class="form-group"><label>Legislation</label><select><option>GST</option><option selected>Income Tax</option></select></div>
+              <div class="form-group"><label>Submission Type</label><select><option selected>Reply to Notice</option></select></div>
+              <div class="form-group"><label>Period</label><input type="text" value="AY 2023-24"></div>
+              <div class="form-group full"><label>Caption</label><input type="text" value="Reply to Notice u/s 148A - Reassessment proceedings"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Extracted Information</h3><button class="btn btn-secondary btn-sm">&#9998; Edit</button></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--text-muted);font-size:.82rem">Entity Name</span><span style="font-size:.85rem;font-weight:600">ABC Industries Pvt Ltd</span></div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--text-muted);font-size:.82rem">Notice Section</span><span style="font-size:.85rem;font-weight:600">Section 148A(b)</span></div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--text-muted);font-size:.82rem">Assessment Year</span><span style="font-size:.85rem;font-weight:600">2023-24</span></div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--text-muted);font-size:.82rem">Amount in Dispute</span><span style="font-size:.85rem;font-weight:700;color:#F59E0B">&#8377; 2,45,00,000</span></div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:var(--text-muted);font-size:.82rem">Issues Identified</span><span style="font-size:.85rem;font-weight:600">3 issues</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Documents</h3><button class="btn btn-primary btn-sm" onclick="document.getElementById('prepare-upload').style.display='block'">&#10010; Add Document</button></div>
+          <div id="prepare-upload" style="display:none;margin-bottom:16px;padding:16px;background:rgba(59,130,246,.05);border-radius:var(--radius);border:1px solid rgba(59,130,246,.2)">
+            <div class="form-grid">
+              <div class="form-group"><label>Category</label><select><option>Reply Template</option><option>Past Case Documents</option><option>Company Specific</option><option>Standard Submission</option><option>Opinion</option><option>Position Paper</option><option>Case Laws</option></select></div>
+              <div class="form-group"><label>Purpose</label><select><option>Submission on Merits</option><option>Facts leading to Notice</option><option>Company Background</option></select></div>
+              <div class="form-group full" style="margin-bottom:0"><label>File</label><input type="file"></div>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Document</th><th>Category</th><th>Purpose</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td>Notice_148A_ABC_AY2324.pdf</td><td><span class="tag tag-amber">Notice</span></td><td>-</td><td><span class="status-dot completed"></span>Extracted</td><td><button class="btn-icon">&#128065;</button> <button class="btn-icon">&#11015;</button></td></tr>
+              <tr><td>Reply_Template_148A_Standard.docx</td><td><span class="tag tag-blue">Reply Template</span></td><td>Submission on Merits</td><td><span class="status-dot completed"></span>Uploaded</td><td><button class="btn-icon">&#128065;</button> <button class="btn-icon">&#128465;</button></td></tr>
+              <tr><td>Previous_Order_AY2122.pdf</td><td><span class="tag tag-purple">Past Case Docs</span></td><td>Facts leading to Notice</td><td><span class="status-dot completed"></span>Uploaded</td><td><button class="btn-icon">&#128065;</button> <button class="btn-icon">&#128465;</button></td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn btn-secondary">Save Draft</button>
+            <button class="btn btn-primary">&#129302; Initiate Preparation</button>
+          </div>
+        </div>
+        <!-- Draft preview -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><h3>Draft Preview</h3><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm">&#11015; Download Word</button><button class="btn btn-primary btn-sm">&#9998; Edit</button></div></div>
+          <div class="section-tabs">
+            <span class="section-tab active">All Sections</span>
+            <span class="section-tab">Form</span>
+            <span class="section-tab">Introduction</span>
+            <span class="section-tab">Company Background</span>
+            <span class="section-tab">Facts</span>
+            <span class="section-tab">Submission</span>
+            <span class="section-tab">Merits</span>
+            <span class="section-tab">Validity</span>
+            <span class="section-tab">Interest & Penalty</span>
+            <span class="section-tab">Prayer</span>
+          </div>
+          <div style="font-size:.85rem;line-height:1.8;color:var(--text-muted);max-height:300px;overflow-y:auto;padding:8px">
+            <p><strong style="color:var(--text);font-size:1rem">REPLY TO NOTICE U/S 148A(b) OF THE INCOME TAX ACT, 1961</strong></p>
+            <p style="margin-top:12px"><strong style="color:var(--text)">1. Introductory Paragraph</strong></p>
+            <p>To,<br>The Assessing Officer,<br>Income Tax Department, New Delhi<br><br>Subject: Reply to Notice u/s 148A(b) dated 15.01.2025 for AY 2023-24</p>
+            <p style="margin-top:12px">Respected Sir/Madam,<br><br>We refer to the above-mentioned notice received by ABC Industries Pvt Ltd (PAN: AABCA1234F) and submit our response herein...</p>
+            <p style="margin-top:12px"><strong style="color:var(--text)">2. Company Background</strong></p>
+            <p>ABC Industries Pvt Ltd is a company incorporated under the Companies Act, 2013, engaged in the business of manufacturing and export of automobile components. The company has been a regular tax-paying entity with all returns filed within due dates...</p>
+            <p style="margin-top:12px"><strong style="color:var(--text)">3. Submission on Merits</strong></p>
+            <p>Issue 1: Alleged undisclosed income from sale of property...<br>It is respectfully submitted that the transaction in question was duly disclosed in the return of income filed for AY 2023-24. The sale consideration of &#8377;1,20,00,000 was received through banking channels and has been reflected in the audited financial statements...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EXTRACT PAGE ===== -->
+      <div class="page" id="page-extract">
+        <div class="page-header">
+          <h1>Extract Information</h1>
+          <p>Extract structured data from invoices, notices, and other unstructured documents</p>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <h3>Upload Document</h3>
+            <div style="display:flex;gap:8px">
+              <select style="padding:8px 14px;font-size:.82rem"><option>Invoice</option><option>Notice</option><option>Order</option></select>
+              <button class="btn btn-primary btn-sm">&#128228; Upload & Extract</button>
+            </div>
+          </div>
+          <div class="upload-zone">
+            <div class="upload-icon">&#128203;</div>
+            <h3>Drop documents here</h3>
+            <p>Supports PDF, ZIP, XLSX formats</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Extracted Data — Invoice #INV-2025-0847</h3><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm">&#11015; Excel</button><button class="btn btn-secondary btn-sm">&#11015; JSON</button></div></div>
+          <div class="extract-grid">
+            <div class="extract-card"><h4>Vendor Name</h4><div class="value">Tech Solutions India Pvt Ltd</div></div>
+            <div class="extract-card"><h4>Invoice Number</h4><div class="value">INV-2025-0847</div></div>
+            <div class="extract-card"><h4>Invoice Date</h4><div class="value">02 Feb 2025</div></div>
+            <div class="extract-card"><h4>GSTIN</h4><div class="value">07AABCT1234F1ZV</div></div>
+            <div class="extract-card"><h4>Taxable Amount</h4><div class="value" style="color:#34D399">&#8377; 4,50,000</div></div>
+            <div class="extract-card"><h4>GST Amount</h4><div class="value" style="color:#FBBF24">&#8377; 81,000 (18%)</div></div>
+            <div class="extract-card"><h4>Total Amount</h4><div class="value" style="color:#60A5FA;font-size:1.15rem">&#8377; 5,31,000</div></div>
+            <div class="extract-card"><h4>HSN Code</h4><div class="value">9983</div></div>
+            <div class="extract-card"><h4>Place of Supply</h4><div class="value">Delhi (07)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== DOCUMENT REPOSITORY PAGE ===== -->
+      <div class="page" id="page-repository">
+        <div class="page-header">
+          <h1>Document Repository</h1>
+          <p>Centralized repository for proprietary tax and legal documents</p>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:20px">
+          <input type="text" placeholder="Search documents..." style="flex:1;max-width:400px">
+          <button class="btn btn-primary">&#10010; Add Document</button>
+          <button class="btn btn-secondary">&#11015; Export</button>
+        </div>
+        <div class="search-filters" style="margin-bottom:20px">
+          <span class="filter-chip active">All</span>
+          <span class="filter-chip">Opinions</span>
+          <span class="filter-chip">Position Papers</span>
+          <span class="filter-chip">Submissions</span>
+          <span class="filter-chip">Contracts</span>
+          <span class="filter-chip">Notices</span>
+          <span class="filter-chip">Litigation</span>
+        </div>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <div class="doc-icon" style="background:rgba(59,130,246,.15);color:#60A5FA">&#128196;</div>
+            <h4>Transfer Pricing Policy Document FY24</h4>
+            <p>Comprehensive TP documentation for inter-company transactions with overseas subsidiaries</p>
+            <div class="doc-footer"><span>PDF &middot; 2.4 MB</span><span>04 Feb 2025</span></div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-icon" style="background:rgba(16,185,129,.15);color:#34D399">&#128196;</div>
+            <h4>GST Opinion — ITC on Employee Benefits</h4>
+            <p>Internal opinion on eligibility of ITC on canteen services, insurance premiums, and CSR expenses</p>
+            <div class="doc-footer"><span>PDF &middot; 856 KB</span><span>02 Feb 2025</span></div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-icon" style="background:rgba(245,158,11,.15);color:#FBBF24">&#128196;</div>
+            <h4>Notice u/s 271(1)(c) — Penalty Proceedings</h4>
+            <p>Show cause notice for penalty proceedings related to alleged concealment of income AY 2021-22</p>
+            <div class="doc-footer"><span>PDF &middot; 1.1 MB</span><span>01 Feb 2025</span></div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-icon" style="background:rgba(139,92,246,.15);color:#A78BFA">&#128196;</div>
+            <h4>Secondment Agreement — UK Entity</h4>
+            <p>Agreement for secondment of employees from UK parent company to Indian subsidiary</p>
+            <div class="doc-footer"><span>DOCX &middot; 340 KB</span><span>30 Jan 2025</span></div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-icon" style="background:rgba(236,72,153,.15);color:#F472B6">&#128196;</div>
+            <h4>Position Paper — Pillar Two Impact</h4>
+            <p>Analysis of GloBE rules and their impact on effective tax rate of Indian operations</p>
+            <div class="doc-footer"><span>PDF &middot; 3.2 MB</span><span>28 Jan 2025</span></div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-icon" style="background:rgba(34,211,238,.15);color:#22D3EE">&#128196;</div>
+            <h4>IT Submission — Section 263 Revision</h4>
+            <p>Reply submission against revision order passed by CIT under section 263 for AY 2020-21</p>
+            <div class="doc-footer"><span>PDF &middot; 1.8 MB</span><span>25 Jan 2025</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== NEW INCOME TAX PAGE ===== -->
+      <div class="page" id="page-newtax">
+        <div class="page-header">
+          <h1>New Income Tax Code</h1>
+          <p>Compare, analyze and query the new Income Tax Bill provisions</p>
+        </div>
+        <div class="master-tabs" style="margin-bottom:24px">
+          <div class="master-tab active">Section Mapping</div>
+          <div class="master-tab">Documents</div>
+          <div class="master-tab">Query AI</div>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <h3>Old &#8596; New Section Mapping</h3>
+            <input type="text" placeholder="Search sections..." style="width:280px;padding:8px 14px;font-size:.82rem">
+          </div>
+          <div class="mapping-table">
+            <div class="mapping-row">
+              <div class="mapping-section"><div class="section-id">Section 139</div><div class="section-title">Return of income</div></div>
+              <div class="mapping-arrow">&#8594;</div>
+              <div class="mapping-section"><div class="section-id">Section 263</div><div class="section-title">Return of income (New Code)</div></div>
+            </div>
+            <div class="mapping-row">
+              <div class="mapping-section"><div class="section-id">Section 92A</div><div class="section-title">Meaning of associated enterprise</div></div>
+              <div class="mapping-arrow">&#8594;</div>
+              <div class="mapping-section"><div class="section-id">Section 162</div><div class="section-title">Associated enterprise (New Code)</div></div>
+            </div>
+            <div class="mapping-row">
+              <div class="mapping-section"><div class="section-id">Section 148</div><div class="section-title">Issue of notice where income has escaped assessment</div></div>
+              <div class="mapping-arrow">&#8594;</div>
+              <div class="mapping-section"><div class="section-id">Section 279</div><div class="section-title">Income escaping assessment (New Code)</div></div>
+            </div>
+            <div class="mapping-row">
+              <div class="mapping-section"><div class="section-id">Section 14A</div><div class="section-title">Expenditure incurred in relation to income not includible</div></div>
+              <div class="mapping-arrow">&#8594;</div>
+              <div class="mapping-section"><div class="section-id">Section 19</div><div class="section-title">Disallowance of expenditure relating to exempt income</div></div>
+            </div>
+            <div class="mapping-row">
+              <div class="mapping-section"><div class="section-id">Section 80C</div><div class="section-title">Deduction in respect of LIC, PPF, etc.</div></div>
+              <div class="mapping-arrow">&#8594;</div>
+              <div class="mapping-section"><div class="section-id">Section 123</div><div class="section-title">Deduction for savings and investments</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RECENT UPDATES PAGE ===== -->
+      <div class="page" id="page-updates">
+        <div class="page-header">
+          <h1>Recent Updates</h1>
+          <p>New tax legal content published in the last 90 days</p>
+        </div>
+        <div class="search-filters" style="margin-bottom:20px">
+          <span class="filter-chip active">All Updates</span>
+          <span class="filter-chip">Relevant to You</span>
+          <span class="filter-chip">Case Laws</span>
+          <span class="filter-chip">Notifications</span>
+          <span class="filter-chip">Circulars</span>
+          <span class="filter-chip">Press Releases</span>
+        </div>
+        <div class="card">
+          <div class="update-item">
+            <div class="update-dot" style="background:var(--accent)"></div>
+            <div class="update-content">
+              <h4>Supreme Court ruling on Virtual Digital Assets taxation</h4>
+              <p>The Supreme Court upheld the constitutional validity of Section 115BBH providing for 30% tax on income from transfer of virtual digital assets, dismissing the challenge by cryptocurrency exchanges.</p>
+              <div class="update-meta"><span class="tag tag-blue">Case Law</span><span>05 Feb 2025</span><span>Income Tax</span></div>
+            </div>
+          </div>
+          <div class="update-item">
+            <div class="update-dot" style="background:var(--success)"></div>
+            <div class="update-content">
+              <h4>CBDT Notification No. 15/2025 — Safe Harbour Rules amendment</h4>
+              <p>CBDT has amended the safe harbour rules for international transactions, revising the operating profit margins for IT and ITeS sectors from 17-18% to 15-16% for AY 2025-26.</p>
+              <div class="update-meta"><span class="tag tag-green">Notification</span><span>03 Feb 2025</span><span>Transfer Pricing</span></div>
+            </div>
+          </div>
+          <div class="update-item">
+            <div class="update-dot" style="background:var(--warning)"></div>
+            <div class="update-content">
+              <h4>GST Council 55th Meeting — Key Decisions</h4>
+              <p>Rate rationalization for insurance sector, online gaming clarifications, and extension of compensation cess till March 2026 were among the key decisions of the 55th GST Council meeting.</p>
+              <div class="update-meta"><span class="tag tag-amber">Press Release</span><span>01 Feb 2025</span><span>GST</span></div>
+            </div>
+          </div>
+          <div class="update-item">
+            <div class="update-dot" style="background:var(--danger)"></div>
+            <div class="update-content">
+              <h4>Delhi HC on MFN clause applicability — ABC Corp v CIT</h4>
+              <p>The Delhi High Court ruled that the MFN clause under the India-Netherlands DTAA is not self-executing and requires a separate notification by the Government of India.</p>
+              <div class="update-meta"><span class="tag tag-blue">Case Law</span><span>30 Jan 2025</span><span>International Tax</span></div>
+            </div>
+          </div>
+          <div class="update-item">
+            <div class="update-dot" style="background:#A78BFA"></div>
+            <div class="update-content">
+              <h4>Circular No. 05/2025 — Faceless Assessment Scheme clarification</h4>
+              <p>CBDT has issued clarification on the scope and procedure of faceless assessment for reassessment cases under section 148/148A of the Income Tax Act.</p>
+              <div class="update-meta"><span class="tag tag-purple">Circular</span><span>28 Jan 2025</span><span>Income Tax</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FEEDBACK PAGE ===== -->
+      <div class="page" id="page-feedback">
+        <div class="page-header">
+          <h1>Feedback</h1>
+          <p>Help us improve Navigate Tax Hub with your feedback</p>
+        </div>
+        <div class="card">
+          <div class="feedback-form">
+            <div class="form-group">
+              <label>How would you rate your experience?</label>
+              <div class="feedback-stars">
+                <span class="feedback-star" onclick="setRating(1)">&#9733;</span>
+                <span class="feedback-star" onclick="setRating(2)">&#9733;</span>
+                <span class="feedback-star" onclick="setRating(3)">&#9733;</span>
+                <span class="feedback-star active" onclick="setRating(4)">&#9733;</span>
+                <span class="feedback-star" onclick="setRating(5)">&#9733;</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Module</label>
+              <select style="width:100%">
+                <option>Search</option>
+                <option>Summarize</option>
+                <option>Query</option>
+                <option>Prepare Submission</option>
+                <option>Extract Information</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Your feedback</label>
+              <textarea placeholder="Share your experience, suggestions, or issues..." rows="5"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Screenshot (optional)</label>
+              <input type="file" accept="image/*">
+            </div>
+            <button class="btn btn-primary">Submit Feedback</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== MASTER PAGE ===== -->
+      <div class="page" id="page-master">
+        <div class="page-header">
+          <h1>Master Data</h1>
+          <p>Manage companies, business units, and users</p>
+        </div>
+        <div class="master-tabs">
+          <div class="master-tab active" onclick="showMasterTab(this,'company')">Company</div>
+          <div class="master-tab" onclick="showMasterTab(this,'bu')">Business Unit</div>
+          <div class="master-tab" onclick="showMasterTab(this,'users')">Users</div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Companies</h3>
+            <div style="display:flex;gap:8px">
+              <input type="text" placeholder="Search..." style="width:200px;padding:8px 12px;font-size:.82rem">
+              <button class="btn btn-secondary btn-sm">&#11015; Export</button>
+              <button class="btn btn-primary btn-sm">&#10010; Add New</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Company Name</th><th>PAN</th><th>Start Date</th><th>Business Units</th><th>Users</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><strong>ABC Industries Pvt Ltd</strong></td><td>AABCA1234F</td><td>01 Apr 2020</td><td>3</td><td>12</td><td><button class="btn-icon">&#9998;</button> <button class="btn-icon">&#128465;</button></td></tr>
+              <tr><td><strong>XYZ Corporation Ltd</strong></td><td>AABCX5678G</td><td>15 Jun 2021</td><td>2</td><td>8</td><td><button class="btn-icon">&#9998;</button> <button class="btn-icon">&#128465;</button></td></tr>
+              <tr><td><strong>Global Tech Solutions</strong></td><td>AABCG9012H</td><td>01 Jan 2022</td><td>4</td><td>18</td><td><button class="btn-icon">&#9998;</button> <button class="btn-icon">&#128465;</button></td></tr>
+              <tr><td><strong>Metro Retail India Pvt Ltd</strong></td><td>AABCM3456J</td><td>10 Mar 2023</td><td>1</td><td>5</td><td><button class="btn-icon">&#9998;</button> <button class="btn-icon">&#128465;</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ===== LOGIN =====
+function doLogin() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+}
+
+// ===== NAVIGATION =====
+function navigate(pageId, el) {
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // Update pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+}
+
+// ===== SEARCH =====
+const searchData = [
+  { title: "Commissioner of Service Tax v. Northern Operating Systems Pvt Ltd", category: "Case Law", legislation: "Service Tax / GST", forum: "Supreme Court", date: "19 May 2022", citation: "[2022] 138 taxmann.com 87 (SC)", excerpt: "The Supreme Court held that secondment of employees by a foreign company to its Indian subsidiary constitutes supply of manpower services and is liable to service tax. The arrangement was examined in light of the employer-employee relationship and the economic substance of the transaction." },
+  { title: "Section 7 of CGST Act, 2017 — Scope of Supply", category: "Act", legislation: "GST", forum: "-", date: "01 Jul 2017", citation: "Section 7, CGST Act", excerpt: "Defines the scope of supply under GST including all forms of supply of goods or services made for a consideration by a person in the course or furtherance of business. Includes import of services for a consideration whether or not in the course or furtherance of business." },
+  { title: "CC, CE & ST v. Arvato India Pvt Ltd — Secondment of Employees", category: "Case Law", legislation: "Service Tax / GST", forum: "CESTAT", date: "15 Nov 2023", citation: "[2023] CESTAT-DEL-2847", excerpt: "CESTAT Delhi examined the characterization of secondment arrangements and held that where the functional control and day-to-day supervision of seconded employees rests with the Indian entity, the arrangement may not constitute supply of manpower service." },
+  { title: "Circular No. 210/4/2024-GST — Secondment and Manpower Supply", category: "Circular", legislation: "GST", forum: "CBIC", date: "12 Mar 2024", citation: "Circular 210/4/2024-GST", excerpt: "CBIC clarifies the GST treatment of secondment arrangements, providing guidelines on when secondment constitutes supply of service and the application of reverse charge mechanism on import of services." },
+];
+
+function performSearch() {
+  const container = document.getElementById('search-results');
+  const query = document.getElementById('search-input').value;
+  if (!query.trim()) return;
+
+  container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted)"><div class="typing-indicator" style="justify-content:center"><span></span><span></span><span></span></div>Searching across repositories...</div>';
+
+  setTimeout(() => {
+    const tagColors = { 'Case Law': 'blue', 'Act': 'green', 'Circular': 'amber', 'Notification': 'purple' };
+    container.innerHTML = `<div style="margin-bottom:12px;font-size:.82rem;color:var(--text-muted)">${searchData.length} results found for "<strong style="color:var(--text)">${query}</strong>"</div>` +
+      searchData.map(r => `
+        <div class="result-item">
+          <div class="result-header">
+            <h4>${r.title}</h4>
+            <span class="tag tag-${tagColors[r.category] || 'blue'}">${r.category}</span>
+          </div>
+          <div class="result-meta">
+            <span>&#9878; ${r.legislation}</span>
+            <span>&#127963; ${r.forum}</span>
+            <span>&#128197; ${r.date}</span>
+            <span>&#128210; ${r.citation}</span>
+          </div>
+          <div class="result-excerpt">${r.excerpt}</div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm">&#128065; View</button>
+            <button class="btn btn-secondary btn-sm">&#128196; Summarize</button>
+            <button class="btn btn-secondary btn-sm">&#128172; Add to QnA</button>
+            <button class="btn btn-secondary btn-sm">&#11015; Download</button>
+          </div>
+        </div>
+      `).join('');
+  }, 800);
+}
+
+// Auto-fill search
+document.getElementById('search-input').value = "GST on secondment of employees";
+
+// ===== CHAT =====
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const container = document.getElementById('chat-messages');
+
+  // User message
+  container.innerHTML += `
+    <div class="chat-msg user">
+      <div class="msg-avatar">AK</div>
+      <div>
+        <div class="msg-bubble">${msg}</div>
+        <div class="msg-time" style="text-align:right">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+      </div>
+    </div>
+  `;
+  input.value = '';
+  container.scrollTop = container.scrollHeight;
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  container.innerHTML += `
+    <div class="chat-msg ai" id="${typingId}">
+      <div class="msg-avatar">AI</div>
+      <div><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>
+    </div>
+  `;
+  container.scrollTop = container.scrollHeight;
+
+  // AI response
+  setTimeout(() => {
+    document.getElementById(typingId).remove();
+    container.innerHTML += `
+      <div class="chat-msg ai">
+        <div class="msg-avatar">AI</div>
+        <div>
+          <div class="msg-bubble">
+            Based on the relevant provisions and case laws available in the NTH repository, here is the analysis for your follow-up query:<br><br>
+            The key consideration is whether the arrangement constitutes a "supply of service" under the GST framework. The determination depends on the nature of the contractual arrangement, the degree of control exercised by each party, and the economic substance of the transaction.<br><br>
+            <div style="padding:10px;background:rgba(59,130,246,.08);border-radius:8px;border-left:3px solid var(--accent);font-size:.82rem;margin-top:8px">
+              <strong>Relevant References:</strong><br>
+              &#8226; Section 7 & 9(3) of CGST Act, 2017<br>
+              &#8226; Northern Operating Systems [2022] SC
+            </div>
+          </div>
+          <div class="msg-time">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} &middot; NTH Repository</div>
+        </div>
+      </div>
+    `;
+    container.scrollTop = container.scrollHeight;
+  }, 1500);
+}
+
+// Enter to send
+document.getElementById('chat-input')?.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+});
+
+// ===== FEEDBACK RATING =====
+function setRating(n) {
+  document.querySelectorAll('.feedback-star').forEach((s, i) => {
+    s.classList.toggle('active', i < n);
+  });
+}
+
+// ===== FILTER CHIPS =====
+document.querySelectorAll('.search-filters, .chat-mode-bar').forEach(container => {
+  container.addEventListener('click', function(e) {
+    const chip = e.target.closest('.filter-chip, .mode-chip');
+    if (!chip) return;
+    const siblings = container.querySelectorAll('.filter-chip, .mode-chip');
+    siblings.forEach(s => s.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+
+// ===== SECTION TABS =====
+document.querySelectorAll('.section-tabs').forEach(container => {
+  container.addEventListener('click', function(e) {
+    const tab = e.target.closest('.section-tab');
+    if (!tab) return;
+    container.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+// ===== MASTER TABS =====
+function showMasterTab(el) {
+  el.parentElement.querySelectorAll('.master-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===== UPLOAD ZONE HOVER =====
+document.querySelectorAll('.upload-zone').forEach(zone => {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; zone.style.background = 'var(--accent-glow)'; });
+  zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; zone.style.background = ''; });
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.style.borderColor = ''; zone.style.background = ''; });
+});
+
+// ===== SUMMARY TOGGLE =====
+document.querySelectorAll('#page-summarize .data-table tbody tr').forEach(row => {
+  row.style.cursor = 'pointer';
+  row.addEventListener('click', () => {
+    const display = document.getElementById('summary-display');
+    display.style.display = display.style.display === 'none' ? 'grid' : 'none';
+  });
+});
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown', function(e) {
+  if (e.altKey) {
+    switch(e.key.toLowerCase()) {
+      case 'e': e.preventDefault(); break; // Enhance prompt
+      case 'n': e.preventDefault(); break; // New chat
+      case 'u': e.preventDefault(); break; // Upload
+      case 'p': e.preventDefault(); break; // Prompt library
+      case 'm': e.preventDefault(); break; // Switch model
+      case 's': e.preventDefault(); break; // Select source
+    }
+    if (e.key === 'Enter') { e.preventDefault(); sendChatMessage(); }
+  }
+});
+</script>
+</body>
+</html>

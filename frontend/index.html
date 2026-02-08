@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPMG AI — Indian Tax Law Research</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        surface: { DEFAULT: '#0f172a', 2: '#1e293b', 3: '#334155' },
+        accent: { DEFAULT: '#3b82f6', hover: '#2563eb' },
+      }
+    }
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  .message-content h1,.message-content h2,.message-content h3 { font-weight:600; margin:0.75em 0 0.25em; }
+  .message-content h1 { font-size:1.25rem; }
+  .message-content h2 { font-size:1.1rem; }
+  .message-content h3 { font-size:1rem; }
+  .message-content p { margin:0.4em 0; line-height:1.7; }
+  .message-content ul,.message-content ol { margin:0.4em 0 0.4em 1.5em; }
+  .message-content li { margin:0.2em 0; line-height:1.6; }
+  .message-content strong { color:#93c5fd; font-weight:600; }
+  .message-content code { background:#1e293b; padding:0.15em 0.4em; border-radius:4px; font-size:0.88em; }
+  .message-content blockquote { border-left:3px solid #3b82f6; padding-left:1em; margin:0.5em 0; color:#94a3b8; }
+  @keyframes pulse-dot { 0%,80%,100%{opacity:0.3} 40%{opacity:1} }
+  .typing-dot { animation: pulse-dot 1.4s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes fade-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .fade-in { animation: fade-in 0.3s ease-out; }
+  .trace-item { border-left: 2px solid #334155; transition: border-color 0.3s; }
+  .trace-item.active { border-left-color: #3b82f6; }
+  .trace-item.done { border-left-color: #10b981; }
+  /* Tabbed response view */
+  .tab-bar { display:flex; gap:4px; border-bottom:1px solid #334155; padding-bottom:0; margin-bottom:0.75rem; flex-wrap:wrap; }
+  .tab-btn { padding:6px 12px; border-radius:8px 8px 0 0; font-size:11px; cursor:pointer; border:none; transition:all 0.2s; font-weight:500; white-space:nowrap; }
+  .tab-btn.active { background:#3b82f6; color:#fff; }
+  .tab-btn:not(.active) { background:#334155; color:#94a3b8; }
+  .tab-btn:not(.active):hover { color:#e2e8f0; background:#475569; }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; animation: fade-in 0.25s ease-out; }
+  .tabbed-view .message-content h2 { display:none; } /* hide the ## header inside panes since it's in the tab */
+</style>
+</head>
+<body class="bg-surface text-slate-200 h-screen flex flex-col overflow-hidden">
+
+<!-- Header -->
+<header class="flex items-center justify-between px-6 py-3 border-b border-slate-700/50 bg-surface-2/80 backdrop-blur-sm flex-shrink-0">
+  <div class="flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center">
+      <svg class="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="text-lg font-semibold text-white">KPMG AI</h1>
+      <p class="text-xs text-slate-400">Indian Tax Law Research Assistant</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <span id="status-indicator" class="flex items-center gap-1.5 text-xs text-slate-400">
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      Ready
+    </span>
+    <button onclick="toggleTrace()" class="px-3 py-1.5 text-xs rounded-lg border border-slate-600 hover:bg-surface-3 transition-colors" title="Toggle trace panel">
+      <span id="trace-toggle-text">Hide Traces</span>
+    </button>
+    <button onclick="clearChat()" class="px-3 py-1.5 text-xs rounded-lg border border-slate-600 hover:bg-surface-3 transition-colors">
+      New Chat
+    </button>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="flex flex-1 overflow-hidden">
+
+  <!-- Chat Panel -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Messages -->
+    <div id="messages" class="flex-1 overflow-y-auto scrollbar-thin px-6 py-4 space-y-4">
+      <!-- Welcome Message -->
+      <div class="flex justify-center py-12">
+        <div class="text-center max-w-lg">
+          <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold text-white mb-2">Indian Tax Law Research</h2>
+          <p class="text-sm text-slate-400 mb-6">Ask about GST, Income Tax, Customs, CBIC Circulars, and case law. I cite specific sections, rules, and judicial precedents.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button onclick="askSuggestion(this)" class="text-left text-xs p-3 rounded-lg bg-surface-2 border border-slate-700/50 hover:border-accent/50 transition-colors">
+              <span class="text-accent font-medium">GST ITC</span>
+              <p class="text-slate-400 mt-1">What is the time limit for claiming ITC under GST?</p>
+            </button>
+            <button onclick="askSuggestion(this)" class="text-left text-xs p-3 rounded-lg bg-surface-2 border border-slate-700/50 hover:border-accent/50 transition-colors">
+              <span class="text-accent font-medium">E-invoicing</span>
+              <p class="text-slate-400 mt-1">Latest CBIC circular on e-invoicing threshold</p>
+            </button>
+            <button onclick="askSuggestion(this)" class="text-left text-xs p-3 rounded-lg bg-surface-2 border border-slate-700/50 hover:border-accent/50 transition-colors">
+              <span class="text-accent font-medium">Capital Gains</span>
+              <p class="text-slate-400 mt-1">How are long-term capital gains on equity taxed after Budget 2024?</p>
+            </button>
+            <button onclick="askSuggestion(this)" class="text-left text-xs p-3 rounded-lg bg-surface-2 border border-slate-700/50 hover:border-accent/50 transition-colors">
+              <span class="text-accent font-medium">TDS</span>
+              <p class="text-slate-400 mt-1">TDS rate on payment to non-resident under Section 195</p>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="px-6 py-4 border-t border-slate-700/50 bg-surface-2/50 flex-shrink-0">
+      <form id="chat-form" class="flex gap-3 items-end max-w-4xl mx-auto">
+        <div class="flex-1 relative">
+          <textarea id="user-input" rows="1" placeholder="Ask about GST, Income Tax, Customs law..."
+            class="w-full px-4 py-3 bg-surface border border-slate-600 rounded-xl text-sm text-slate-200 placeholder-slate-500 resize-none focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50 transition-colors"
+            style="max-height:150px"></textarea>
+        </div>
+        <button type="submit" id="send-btn"
+          class="px-5 py-3 bg-accent hover:bg-accent-hover text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
+          </svg>
+          Send
+        </button>
+      </form>
+      <p class="text-center text-[10px] text-slate-500 mt-2">KPMG AI provides legal research assistance. Always verify with official sources before acting.</p>
+    </div>
+  </div>
+
+  <!-- Trace Panel -->
+  <div id="trace-panel" class="w-80 border-l border-slate-700/50 bg-surface-2/50 flex flex-col flex-shrink-0 overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-700/50">
+      <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+        <svg class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Agent Trace
+      </h3>
+      <p class="text-[10px] text-slate-500 mt-0.5">Research steps and tool calls</p>
+    </div>
+    <div id="trace-log" class="flex-1 overflow-y-auto scrollbar-thin px-4 py-3 space-y-2">
+      <p class="text-xs text-slate-500 italic">Traces will appear here when you ask a question...</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API_BASE = '';
+const messagesEl = document.getElementById('messages');
+const traceLog = document.getElementById('trace-log');
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const statusEl = document.getElementById('status-indicator');
+const tracePanel = document.getElementById('trace-panel');
+let chatHistory = [];
+let isStreaming = false;
+
+// Auto-resize textarea
+userInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+});
+
+// Enter to send (Shift+Enter for newline)
+userInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    chatForm.dispatchEvent(new Event('submit'));
+  }
+});
+
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = userInput.value.trim();
+  if (!msg || isStreaming) return;
+  sendMessage(msg);
+});
+
+function askSuggestion(btn) {
+  const text = btn.querySelector('p').textContent;
+  sendMessage(text);
+}
+
+async function sendMessage(msg) {
+  isStreaming = true;
+  sendBtn.disabled = true;
+  userInput.value = '';
+  userInput.style.height = 'auto';
+
+  // Remove welcome screen
+  const welcome = messagesEl.querySelector('.justify-center');
+  if (welcome) welcome.remove();
+
+  // Add user message
+  appendMessage('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+
+  // Clear trace log
+  traceLog.innerHTML = '';
+  setStatus('searching', 'Researching...');
+
+  // Create assistant bubble
+  const assistantEl = appendMessage('assistant', '');
+  const contentEl = assistantEl.querySelector('.message-content');
+
+  // Add typing indicator
+  contentEl.innerHTML = `<div class="flex gap-1 py-2"><span class="typing-dot w-2 h-2 rounded-full bg-slate-400"></span><span class="typing-dot w-2 h-2 rounded-full bg-slate-400"></span><span class="typing-dot w-2 h-2 rounded-full bg-slate-400"></span></div>`;
+
+  let fullResponse = '';
+  let typingRemoved = false;
+
+  try {
+    const response = await fetch(`${API_BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, history: chatHistory.slice(0, -1) }),
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          var currentEvent = line.slice(6).trim();
+        } else if (line.startsWith('data:') && currentEvent) {
+          const data = line.slice(5).trim();
+          if (!data) continue;
+
+          try {
+            const parsed = JSON.parse(data);
+
+            if (currentEvent === 'token') {
+              if (!typingRemoved) {
+                contentEl.innerHTML = '';
+                typingRemoved = true;
+              }
+              fullResponse += parsed.content;
+              contentEl.innerHTML = renderMarkdown(fullResponse);
+              scrollToBottom();
+            } else if (currentEvent === 'trace') {
+              addTrace(parsed);
+            } else if (currentEvent === 'done') {
+              if (!typingRemoved) {
+                contentEl.innerHTML = '';
+                typingRemoved = true;
+              }
+              if (!fullResponse && parsed.full_response) {
+                fullResponse = parsed.full_response;
+                contentEl.innerHTML = renderMarkdown(fullResponse);
+              }
+            } else if (currentEvent === 'error') {
+              contentEl.innerHTML = `<p class="text-red-400">Error: ${parsed.error}</p>`;
+            }
+          } catch (parseErr) {
+            // Skip unparseable lines
+          }
+          currentEvent = null;
+        }
+      }
+    }
+  } catch (err) {
+    if (!typingRemoved) contentEl.innerHTML = '';
+    contentEl.innerHTML = `<p class="text-red-400">Connection error: ${err.message}. Make sure the backend is running on port 8000.</p>`;
+  }
+
+  if (fullResponse) {
+    chatHistory.push({ role: 'assistant', content: fullResponse });
+
+    // Post-stream: convert to tabbed view if sections found
+    const sections = parseSections(fullResponse);
+    if (sections && sections.length >= 2) {
+      renderTabbedView(sections, contentEl);
+    }
+  }
+
+  isStreaming = false;
+  sendBtn.disabled = false;
+  setStatus('ready', 'Ready');
+  userInput.focus();
+}
+
+function appendMessage(role, content) {
+  const div = document.createElement('div');
+  div.className = `fade-in flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+  if (role === 'user') {
+    div.innerHTML = `
+      <div class="max-w-[75%] px-4 py-3 rounded-2xl rounded-br-md bg-accent text-white text-sm leading-relaxed">
+        ${escapeHtml(content)}
+      </div>`;
+  } else {
+    div.innerHTML = `
+      <div class="max-w-[85%] flex gap-3">
+        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div class="message-content text-sm text-slate-300 leading-relaxed pt-1"></div>
+      </div>`;
+  }
+  messagesEl.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+function addTrace(data) {
+  const item = document.createElement('div');
+  item.className = 'trace-item pl-3 py-2 fade-in';
+
+  const toolIcons = {
+    web_search: '\u{1F50D}',
+    search_indian_kanoon: '\u{2696}\uFE0F',
+    lookup_gst_section: '\u{1F4D1}',
+    search_income_tax: '\u{1F4B0}',
+    search_gst_circulars: '\u{1F4CB}',
+  };
+
+  const toolLabels = {
+    web_search: 'Web Search',
+    search_indian_kanoon: 'Indian Kanoon',
+    lookup_gst_section: 'GST Section',
+    search_income_tax: 'Income Tax',
+    search_gst_circulars: 'CBIC Circulars',
+  };
+
+  const icon = toolIcons[data.tool] || '\u{1F527}';
+  const label = toolLabels[data.tool] || data.tool;
+
+  if (data.type === 'tool_start') {
+    item.classList.add('active');
+    item.innerHTML = `
+      <div class="flex items-center gap-2 text-xs">
+        <span>${icon}</span>
+        <span class="text-accent font-medium">${label}</span>
+        <span class="text-slate-500">&bull; searching</span>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-1 mono truncate">${escapeHtml(data.query)}</p>
+    `;
+    item.dataset.tool = data.tool;
+  } else if (data.type === 'tool_end') {
+    // Mark previous matching start as done
+    const prev = traceLog.querySelector(`.trace-item.active[data-tool="${data.tool}"]`);
+    if (prev) {
+      prev.classList.remove('active');
+      prev.classList.add('done');
+      const statusSpan = prev.querySelector('.text-slate-500');
+      if (statusSpan) statusSpan.textContent = '\u2022 done';
+    }
+    item.classList.add('done');
+    item.innerHTML = `
+      <div class="flex items-center gap-2 text-xs">
+        <span>\u2705</span>
+        <span class="text-emerald-400 font-medium">${label}</span>
+        <span class="text-slate-500">&bull; found results</span>
+      </div>
+      <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">${escapeHtml(data.result_preview?.substring(0, 150) || '')}</p>
+    `;
+  }
+
+  traceLog.appendChild(item);
+  traceLog.scrollTop = traceLog.scrollHeight;
+}
+
+function setStatus(type, text) {
+  const dot = statusEl.querySelector('span:first-child');
+  const label = statusEl.querySelector('span:first-child')?.nextSibling || statusEl;
+  if (type === 'searching') {
+    dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+    statusEl.lastChild.textContent = text;
+  } else {
+    dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+    statusEl.lastChild.textContent = text;
+  }
+}
+
+function toggleTrace() {
+  const text = document.getElementById('trace-toggle-text');
+  if (tracePanel.style.display === 'none') {
+    tracePanel.style.display = 'flex';
+    text.textContent = 'Hide Traces';
+  } else {
+    tracePanel.style.display = 'none';
+    text.textContent = 'Show Traces';
+  }
+}
+
+function clearChat() {
+  chatHistory = [];
+  messagesEl.innerHTML = `
+    <div class="flex justify-center py-12">
+      <div class="text-center max-w-lg">
+        <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <h2 class="text-xl font-semibold text-white mb-2">Indian Tax Law Research</h2>
+        <p class="text-sm text-slate-400">Ask about GST, Income Tax, Customs, CBIC Circulars, and case law.</p>
+      </div>
+    </div>`;
+  traceLog.innerHTML = '<p class="text-xs text-slate-500 italic">Traces will appear here when you ask a question...</p>';
+}
+
+function scrollToBottom() {
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function parseSections(markdown) {
+  // Split markdown on ## headers, return [{title, content}]
+  const sections = [];
+  const regex = /^## (.+)$/gm;
+  let match;
+  const splits = [];
+
+  while ((match = regex.exec(markdown)) !== null) {
+    splits.push({ title: match[1].trim(), index: match.index, headerLen: match[0].length });
+  }
+
+  if (splits.length < 2) return null; // fallback: not enough sections
+
+  for (let i = 0; i < splits.length; i++) {
+    const contentStart = splits[i].index + splits[i].headerLen;
+    const contentEnd = i + 1 < splits.length ? splits[i + 1].index : markdown.length;
+    const content = markdown.slice(contentStart, contentEnd).trim();
+    sections.push({ title: splits[i].title, content });
+  }
+
+  return sections;
+}
+
+function renderTabbedView(sections, container) {
+  container.innerHTML = '';
+  container.classList.add('tabbed-view');
+
+  // Tab icons
+  const tabIcons = {
+    'Summary': '\u{1F4CB}',
+    'Legal Analysis': '\u{2696}\uFE0F',
+    'Circulars & Notifications': '\u{1F4E2}',
+    'Case Law': '\u{1F3DB}\uFE0F',
+    'Recent Amendments': '\u{1F4C5}',
+    'Sources & References': '\u{1F517}',
+  };
+
+  // Build tab bar
+  const tabBar = document.createElement('div');
+  tabBar.className = 'tab-bar';
+
+  // Build panes
+  const panesWrapper = document.createElement('div');
+
+  sections.forEach((sec, i) => {
+    // Tab button
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+    const icon = tabIcons[sec.title] || '\u{1F4C4}';
+    btn.textContent = icon + ' ' + sec.title;
+    btn.addEventListener('click', () => {
+      tabBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      panesWrapper.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      pane.classList.add('active');
+    });
+    tabBar.appendChild(btn);
+
+    // Pane
+    const pane = document.createElement('div');
+    pane.className = 'tab-pane message-content text-sm text-slate-300 leading-relaxed' + (i === 0 ? ' active' : '');
+    pane.innerHTML = renderMarkdown(sec.content);
+    panesWrapper.appendChild(pane);
+  });
+
+  container.appendChild(tabBar);
+  container.appendChild(panesWrapper);
+}
+
+function renderMarkdown(text) {
+  // Simple markdown rendering
+  let html = escapeHtml(text);
+
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Links [text](url) — must come before bold/italic to avoid conflicts
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-accent underline hover:text-accent-hover transition-colors">$1</a>');
+
+  // Bold & Italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Code blocks
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-surface p-3 rounded-lg my-2 overflow-x-auto text-xs"><code>$2</code></pre>');
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Blockquotes
+  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Unordered lists
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+  // Numbered lists
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  // Line breaks → paragraphs
+  html = html.replace(/\n\n/g, '</p><p>');
+  html = html.replace(/\n/g, '<br>');
+
+  // Wrap in paragraph
+  if (!html.startsWith('<')) html = '<p>' + html + '</p>';
+
+  return html;
+}
+</script>
+</body>
+</html>
